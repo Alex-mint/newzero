@@ -1,0 +1,829 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#050505">
+    <title>Ритм — таймер поста</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #050505;
+        color: #f7f5f6;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+        --muted: #a9a6a9;
+        --card: #171717;
+        --accent: #ef4f55;
+        --pink: #a9004f;
+        --green: #08d279;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        min-width: 320px;
+        min-height: 100vh;
+        margin: 0;
+        background: #050505;
+      }
+
+      button { font: inherit; }
+
+      .app {
+        width: min(100%, 600px);
+        min-height: 100vh;
+        margin: 0 auto;
+        padding: 20px 23px 112px;
+      }
+
+      .topbar {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        align-items: center;
+        min-height: 54px;
+      }
+
+      .icon-button {
+        display: grid;
+        width: 56px;
+        height: 56px;
+        place-items: center;
+        border: 0;
+        border-radius: 50%;
+        background: #1c1a1c;
+        color: #d9d3d7;
+        cursor: pointer;
+      }
+
+      .icon-button:last-child { justify-self: end; }
+      .icon-button svg { width: 28px; height: 28px; }
+
+      .brand {
+        margin: 0;
+        color: var(--accent);
+        font-size: 30px;
+        font-weight: 750;
+        letter-spacing: -1.2px;
+        text-align: center;
+      }
+
+      .week {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+        margin: 18px 0 28px;
+      }
+
+      .day {
+        display: grid;
+        justify-items: center;
+        gap: 9px;
+        color: #d8d5d8;
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+      }
+
+      .day-ring {
+        width: 39px;
+        height: 39px;
+        border: 8px solid #222124;
+        border-radius: 50%;
+      }
+
+      .day.is-complete .day-ring { border-color: var(--green); }
+
+      .timer-card {
+        position: relative;
+        display: flex;
+        min-height: 660px;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        overflow: hidden;
+        padding: 24px 16px 34px;
+        border-radius: 12px;
+        background: #151515;
+      }
+
+      .goal-badge {
+        position: absolute;
+        z-index: 2;
+        top: 12px;
+        right: 10px;
+        display: grid;
+        width: 62px;
+        height: 62px;
+        place-items: center;
+        border-radius: 50%;
+        background: #292729;
+        color: #d9d0d7;
+        font-size: 29px;
+        font-weight: 400;
+        cursor: pointer;
+      }
+
+      .goal-badge:hover:not(:disabled) { background: #393639; }
+      .goal-badge:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 4px;
+      }
+      .goal-badge:disabled { cursor: default; }
+
+      .duration-dialog {
+        width: min(420px, calc(100vw - 32px));
+        padding: 0;
+        border: 1px solid #393539;
+        border-radius: 18px;
+        background: #1b191b;
+        color: #f7f5f6;
+        box-shadow: 0 24px 80px #000b;
+      }
+
+      .duration-dialog::backdrop { background: #000b; }
+
+      .duration-form {
+        display: grid;
+        gap: 18px;
+        padding: 26px;
+      }
+
+      .duration-form h2 {
+        margin: 0;
+        font-size: 23px;
+      }
+
+      .duration-form p {
+        margin: -10px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .duration-input-label {
+        display: grid;
+        gap: 9px;
+        color: #e1dce0;
+        font-size: 15px;
+        font-weight: 650;
+      }
+
+      .duration-input {
+        width: 100%;
+        min-height: 58px;
+        padding: 0 16px;
+        border: 1px solid #484348;
+        border-radius: 10px;
+        background: #111;
+        color: #fff;
+        font: inherit;
+        font-size: 26px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .duration-input:focus-visible {
+        outline: 2px solid #f26a9e;
+        outline-offset: 2px;
+      }
+
+      .duration-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 2px;
+      }
+
+      .dialog-button {
+        min-height: 46px;
+        padding: 0 18px;
+        border: 0;
+        border-radius: 999px;
+        background: #373337;
+        color: #fff;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .dialog-button-primary { background: var(--pink); }
+      .dialog-button:hover { filter: brightness(1.15); }
+      .dialog-button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+      @media (max-width: 420px) {
+        .duration-form { padding: 22px; }
+      }
+
+      .clock {
+        position: relative;
+        display: grid;
+        width: min(100%, 480px);
+        aspect-ratio: 1;
+        flex: 0 0 auto;
+        place-items: center;
+        margin-top: 4px;
+      }
+
+      .clock svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        transform: rotate(-90deg);
+      }
+
+      .track, .progress {
+        fill: none;
+        stroke-width: 30;
+      }
+
+      .track { stroke: #303032; }
+
+      .progress {
+        stroke: var(--pink);
+        stroke-dasharray: 1115 1144;
+        stroke-dashoffset: 1115;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 0.5s linear, stroke 0.3s ease;
+      }
+
+      .timer-card.is-active .progress { stroke: #e90068; }
+      .timer-card.is-goal-reached .progress { stroke: var(--green); }
+
+      .clock-copy {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        gap: 4px;
+        padding: 16px;
+        text-align: center;
+      }
+
+      .clock-label {
+        color: #d4d1d3;
+        font-size: clamp(18px, 4.8vw, 27px);
+        font-weight: 400;
+      }
+
+      .clock-time {
+        font-size: clamp(40px, 11vw, 57px);
+        font-weight: 600;
+        letter-spacing: 1px;
+        line-height: 1.12;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .clock-caption {
+        min-height: 16px;
+        color: #999599;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 2px;
+      }
+
+      .timer-action {
+        min-width: 230px;
+        min-height: 66px;
+        margin-top: 24px;
+        padding: 0 30px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--pink);
+        color: #fff;
+        cursor: pointer;
+        font-size: 23px;
+        font-weight: 750;
+        transition: transform 0.15s ease, background 0.15s ease;
+      }
+
+      .timer-action:hover { background: #c4005b; }
+      .timer-action:active { transform: scale(0.98); }
+      .timer-action:focus-visible, .icon-button:focus-visible, .nav-item:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 4px;
+      }
+
+      .timer-card.is-active .timer-action { background: #333033; }
+      .timer-card.is-active .timer-action:hover { background: #454145; }
+
+      .info-card {
+        display: flex;
+        min-height: 92px;
+        align-items: center;
+        gap: 20px;
+        margin-top: 24px;
+        padding: 14px 21px;
+        border-radius: 12px;
+        background: #1c1b1c;
+      }
+
+      .plus-disc {
+        display: grid;
+        width: 68px;
+        height: 68px;
+        flex: 0 0 auto;
+        place-items: center;
+        border-radius: 50%;
+        background: #302d30;
+        color: #d4cbd1;
+        font-size: 53px;
+        font-weight: 500;
+        line-height: 1;
+      }
+
+      .info-copy { display: grid; gap: 2px; }
+      .info-copy strong { font-size: 23px; font-weight: 750; }
+      .info-copy span { color: #bcb9bc; font-size: 21px; }
+
+      .promo-card {
+        position: relative;
+        min-height: 180px;
+        overflow: hidden;
+        margin-top: 24px;
+        padding: 32px;
+        border-radius: 12px;
+        background: linear-gradient(125deg, #202020 10%, #141414 75%);
+      }
+
+      .promo-card h2 {
+        max-width: 330px;
+        margin: 0 0 10px;
+        font-size: 24px;
+      }
+
+      .promo-card p {
+        max-width: 260px;
+        margin: 0;
+        color: #d6d3d5;
+        font-size: 21px;
+      }
+
+      .promo-art {
+        position: absolute;
+        right: -5px;
+        bottom: -30px;
+        display: grid;
+        width: 155px;
+        height: 125px;
+        place-items: center;
+        border: 8px solid #373438;
+        border-radius: 25px;
+        background: radial-gradient(ellipse at 50% 45%, #e1b274 0 22%, #5b8047 23% 37%, #3c2c23 38% 50%, #b6a183 51% 59%, #222 60%);
+        box-shadow: 0 0 0 2px #100f10;
+        font-size: 50px;
+      }
+
+      .bottom-nav {
+        position: fixed;
+        z-index: 5;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        display: grid;
+        width: min(100%, 600px);
+        min-height: 78px;
+        grid-template-columns: repeat(4, 1fr);
+        margin: 0 auto;
+        padding: 8px 10px max(8px, env(safe-area-inset-bottom));
+        border-top: 1px solid #242224;
+        background: rgba(17, 16, 17, 0.97);
+        backdrop-filter: blur(12px);
+      }
+
+      .nav-item {
+        display: grid;
+        justify-items: center;
+        align-content: center;
+        gap: 2px;
+        border: 0;
+        background: transparent;
+        color: #bcb9bc;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      .nav-item svg { width: 34px; height: 34px; }
+      .nav-item.is-current { color: var(--accent); }
+      .nav-item.is-current svg { fill: var(--accent); }
+
+      .notice {
+        position: fixed;
+        z-index: 10;
+        right: 16px;
+        bottom: 100px;
+        left: 16px;
+        width: fit-content;
+        max-width: min(460px, calc(100vw - 32px));
+        margin: auto;
+        padding: 12px 16px;
+        border: 1px solid #6c3339;
+        border-radius: 10px;
+        background: #2a1719;
+        color: #ffdfe1;
+        font-size: 14px;
+      }
+
+      .notice[hidden] { display: none; }
+
+      @media (max-width: 420px) {
+        .app { padding: 14px 16px 104px; }
+        .timer-card { min-height: auto; padding: 28px 10px 28px; }
+        .clock { width: min(100%, 420px); }
+        .timer-action { min-height: 58px; margin-top: 16px; font-size: 20px; }
+        .info-card { gap: 14px; padding: 12px 16px; }
+        .info-copy strong { font-size: 20px; }
+        .info-copy span { font-size: 17px; }
+        .day { font-size: 12px; letter-spacing: 1px; }
+        .day-ring { width: 35px; height: 35px; border-width: 7px; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <button class="icon-button" type="button" aria-label="История постов">
+          <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <circle cx="16" cy="16" r="12.2" stroke="currentColor" stroke-width="2.3"/>
+            <path d="m10.5 16.2 3.7 3.7 7.6-8" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <h1 class="brand">Ритм</h1>
+        <button class="icon-button" type="button" aria-label="Добавить запись">
+          <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <path d="M16 7v18M7 16h18" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </header>
+
+      <section class="week" id="week" aria-label="На этой неделе"></section>
+
+      <section class="timer-card" id="timerCard" aria-label="Таймер поста">
+        <button class="goal-badge" id="goalBadge" type="button" aria-label="Изменить длительность поста, 36 часов">36</button>
+        <div class="clock">
+          <svg viewBox="0 0 400 400" role="img" aria-label="Прогресс поста">
+            <circle class="track" cx="200" cy="200" r="182"/>
+            <circle class="progress" id="progressRing" cx="200" cy="200" r="182"/>
+          </svg>
+          <div class="clock-copy" aria-live="polite">
+            <span class="clock-label" id="clockLabel">Время с последнего поста</span>
+            <span class="clock-time" id="clockTime">0 дней</span>
+            <span class="clock-caption" id="clockCaption"></span>
+          </div>
+        </div>
+        <button class="timer-action" id="timerAction" type="button">Начать пост</button>
+      </section>
+
+      <section class="info-card" aria-label="Добавить за день">
+        <span class="plus-disc" aria-hidden="true">+</span>
+        <div class="info-copy">
+          <strong>Добавить за день</strong>
+          <span>Еда, активность, сон и другое</span>
+        </div>
+      </section>
+
+      <section class="promo-card" aria-label="Ритм Плюс">
+        <h2>Больше, чем пост</h2>
+        <p>Для участников «Ритм Плюс»</p>
+        <div class="promo-art" aria-hidden="true">🥗</div>
+      </section>
+    </main>
+
+    <dialog class="duration-dialog" id="durationDialog" aria-labelledby="durationTitle">
+      <form class="duration-form" id="durationForm">
+        <h2 id="durationTitle">Длительность поста</h2>
+        <p>Выберите цель от 1 до 168 часов. Чтобы начать отсчёт, после сохранения нажмите «Начать пост».</p>
+        <label class="duration-input-label" for="durationHours">
+          Длительность, часов
+          <input class="duration-input" id="durationHours" name="durationHours" type="number" min="1" max="168" step="1" inputmode="numeric" required>
+        </label>
+        <div class="duration-actions">
+          <button class="dialog-button" id="cancelDuration" type="button">Отмена</button>
+          <button class="dialog-button dialog-button-primary" type="submit">Сохранить</button>
+        </div>
+      </form>
+    </dialog>
+
+    <nav class="bottom-nav" aria-label="Основная навигация">
+      <button class="nav-item is-current" type="button" aria-current="page">
+        <svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" stroke-width="6"/><circle cx="18" cy="18" r="6" fill="currentColor"/></svg>
+        <span>Сегодня</span>
+      </button>
+      <button class="nav-item" type="button">
+        <svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15" fill="currentColor"/><path d="m22.5 9-2.7 8.4-8.3 3 11-11.4Zm-9 17 2.6-6.2 6.5-2.5L13.5 26Z" fill="#171717"/></svg>
+        <span>Обзор</span>
+      </button>
+      <button class="nav-item" type="button">
+        <svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15" fill="currentColor"/><circle cx="18" cy="14" r="5" fill="#171717"/><path d="M8.5 27c1.2-5.1 4.4-7.7 9.5-7.7s8.3 2.6 9.5 7.7" fill="#171717"/></svg>
+        <span>Профиль</span>
+      </button>
+      <button class="nav-item" type="button">
+        <svg viewBox="0 0 36 36" aria-hidden="true"><path d="M18 2c2.2 6.8-1.1 8.8 2.5 12.5 1.6-2.1 2-4.2 1.8-6.1 5 3.6 8.2 8.7 8.2 14.1A12.5 12.5 0 0 1 18 35 12.5 12.5 0 0 1 5.5 22.5c0-5.8 3.4-11.2 9.6-16.2-.5 5.1.1 7.7 1.9 9.2C19.2 11.4 18.6 7 18 2Z" fill="currentColor"/><path d="M18 19c3 3.3 4.3 5.4 4.3 7.7a4.3 4.3 0 0 1-8.6 0c0-2.3 1.3-4.4 4.3-7.7Z" fill="#171717"/></svg>
+        <span>Ритм Плюс</span>
+      </button>
+    </nav>
+    <p class="notice" id="notice" role="status" hidden></p>
+
+    <script>
+      (() => {
+        const hourMs = 60 * 60 * 1000;
+        const maxDurationHours = 168;
+        const storageKey = "zero-fast-start-time";
+        const legacyEndTimeStorageKey = "zero-fast-end-time";
+        const selectedDurationStorageKey = "zero-selected-duration-hours";
+        const activeDurationStorageKey = "zero-active-duration-ms";
+        const lastFastEndStorageKey = "zero-last-fast-end-time";
+        const circumference = 2 * Math.PI * 182;
+        const visibleArc = circumference * 0.975;
+        const ring = document.getElementById("progressRing");
+        const timerCard = document.getElementById("timerCard");
+        const timerAction = document.getElementById("timerAction");
+        const goalBadge = document.getElementById("goalBadge");
+        const durationDialog = document.getElementById("durationDialog");
+        const durationForm = document.getElementById("durationForm");
+        const durationHoursInput = document.getElementById("durationHours");
+        const cancelDuration = document.getElementById("cancelDuration");
+        const clockLabel = document.getElementById("clockLabel");
+        const clockTime = document.getElementById("clockTime");
+        const clockCaption = document.getElementById("clockCaption");
+        const notice = document.getElementById("notice");
+        let selectedDurationHours = 36;
+        let activeDurationMs = selectedDurationHours * hourMs;
+        let startTime = null;
+        let lastFastEndTime = null;
+        let ticker = null;
+        let dayTicker = null;
+
+        ring.style.strokeDasharray = `${visibleArc} ${circumference}`;
+
+        function showNotice(message) {
+          notice.textContent = message;
+          notice.hidden = false;
+        }
+
+        function hideNotice() {
+          notice.textContent = "";
+          notice.hidden = true;
+        }
+
+        function saveStartTime(value) {
+          try {
+            if (value === null) {
+              localStorage.removeItem(storageKey);
+              localStorage.removeItem(legacyEndTimeStorageKey);
+              localStorage.removeItem(activeDurationStorageKey);
+            } else {
+              localStorage.setItem(storageKey, String(value));
+              localStorage.removeItem(legacyEndTimeStorageKey);
+            }
+            return true;
+          } catch {
+            showNotice(value === null
+              ? "Не удалось очистить данные завершённого поста."
+              : "Пост начался, но браузер не смог сохранить его для восстановления после перезагрузки страницы.");
+            return false;
+          }
+        }
+
+        function readStartTime() {
+          try {
+            const savedStartTime = Number(localStorage.getItem(storageKey));
+            if (Number.isFinite(savedStartTime) && savedStartTime > 0 && savedStartTime <= Date.now()) {
+              localStorage.removeItem(legacyEndTimeStorageKey);
+              return savedStartTime;
+            }
+
+            const legacyEndTime = Number(localStorage.getItem(legacyEndTimeStorageKey));
+            if (!Number.isFinite(legacyEndTime) || legacyEndTime <= 0) return null;
+
+            activeDurationMs = readActiveDuration();
+            if (legacyEndTime <= Date.now()) {
+              saveStartTime(null);
+              saveLastFastEndTime(legacyEndTime);
+              return null;
+            }
+
+            const migratedStartTime = legacyEndTime - activeDurationMs;
+            saveStartTime(migratedStartTime);
+            return migratedStartTime;
+          } catch {
+            showNotice("Браузер не смог восстановить сохранённый пост.");
+            return null;
+          }
+        }
+
+        function saveSelectedDuration(hours) {
+          try {
+            localStorage.setItem(selectedDurationStorageKey, String(hours));
+            return true;
+          } catch {
+            showNotice("Не удалось сохранить выбранную длительность в памяти браузера.");
+            return false;
+          }
+        }
+
+        function readSelectedDuration() {
+          try {
+            const saved = Number(localStorage.getItem(selectedDurationStorageKey));
+            return Number.isInteger(saved) && saved >= 1 && saved <= maxDurationHours ? saved : 36;
+          } catch {
+            showNotice("Браузер не смог восстановить выбранную длительность. Установлена цель 36 часов.");
+            return 36;
+          }
+        }
+
+        function saveActiveDuration(durationMs) {
+          try {
+            localStorage.setItem(activeDurationStorageKey, String(durationMs));
+          } catch {
+            showNotice("Не удалось сохранить длительность активного поста для восстановления.");
+          }
+        }
+
+        function readActiveDuration() {
+          try {
+            const saved = Number(localStorage.getItem(activeDurationStorageKey));
+            return Number.isFinite(saved) && saved >= hourMs && saved <= maxDurationHours * hourMs
+              ? saved
+              : selectedDurationHours * hourMs;
+          } catch {
+            showNotice("Браузер не смог восстановить длительность активного поста.");
+            return selectedDurationHours * hourMs;
+          }
+        }
+
+        function updateGoalBadge() {
+          goalBadge.textContent = String(selectedDurationHours);
+          goalBadge.setAttribute("aria-label", `Изменить длительность поста, ${selectedDurationHours} ч`);
+          goalBadge.disabled = startTime !== null;
+        }
+
+        function saveLastFastEndTime(value) {
+          lastFastEndTime = value;
+          try {
+            localStorage.setItem(lastFastEndStorageKey, String(value));
+          } catch {
+            showNotice("Не удалось сохранить время завершения поста в памяти браузера.");
+          }
+        }
+
+        function readLastFastEndTime() {
+          try {
+            const saved = Number(localStorage.getItem(lastFastEndStorageKey));
+            return Number.isFinite(saved) && saved > 0 ? saved : null;
+          } catch {
+            showNotice("Браузер не смог восстановить время завершения последнего поста.");
+            return null;
+          }
+        }
+
+        function formatDays(days) {
+          const remainder = days % 10;
+          const lastTwoDigits = days % 100;
+          if (remainder === 1 && lastTwoDigits !== 11) return "день";
+          if (remainder >= 2 && remainder <= 4 && (lastTwoDigits < 12 || lastTwoDigits > 14)) return "дня";
+          return "дней";
+        }
+
+        function renderDaysSinceLastFast() {
+          const days = lastFastEndTime === null
+            ? 0
+            : Math.floor(Math.max(0, Date.now() - lastFastEndTime) / 86400000);
+          clockLabel.textContent = "Время с последнего поста";
+          clockTime.textContent = `${days} ${formatDays(days)}`;
+          clockCaption.textContent = "";
+          ring.style.strokeDashoffset = String(visibleArc);
+        }
+
+        function render(elapsedMs) {
+          const elapsed = Math.max(0, elapsedMs);
+          const progress = Math.min(1, elapsed / activeDurationMs);
+          const totalSeconds = Math.floor(elapsed / 1000);
+          const hours = Math.floor(totalSeconds / 3600);
+          const minutes = Math.floor((totalSeconds % 3600) / 60);
+          const seconds = totalSeconds % 60;
+
+          ring.style.strokeDashoffset = String(visibleArc * (1 - progress));
+          timerCard.classList.toggle("is-goal-reached", elapsed >= activeDurationMs);
+          clockLabel.textContent = "Время поста";
+          clockTime.textContent = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+          clockCaption.textContent = "ЧАСЫ : МИНУТЫ : СЕКУНДЫ";
+        }
+
+        function finishFast() {
+          const finishedAt = Date.now();
+          startTime = null;
+          if (ticker !== null) {
+            window.clearInterval(ticker);
+            ticker = null;
+          }
+          if (dayTicker !== null) {
+            window.clearInterval(dayTicker);
+            dayTicker = null;
+          }
+          saveStartTime(null);
+          saveLastFastEndTime(finishedAt);
+          timerCard.classList.remove("is-active", "is-goal-reached");
+          timerAction.textContent = "Начать пост";
+          updateGoalBadge();
+          renderDaysSinceLastFast();
+          dayTicker = window.setInterval(renderDaysSinceLastFast, 60000);
+        }
+
+        function updateTimer() {
+          if (startTime === null) return;
+          render(Date.now() - startTime);
+        }
+
+        function startFast() {
+          hideNotice();
+          if (dayTicker !== null) {
+            window.clearInterval(dayTicker);
+            dayTicker = null;
+          }
+          activeDurationMs = selectedDurationHours * hourMs;
+          startTime = Date.now();
+          timerCard.classList.add("is-active");
+          timerAction.textContent = "Завершить пост";
+          updateGoalBadge();
+          saveActiveDuration(activeDurationMs);
+          saveStartTime(startTime);
+          updateTimer();
+          ticker = window.setInterval(updateTimer, 1000);
+        }
+
+        timerAction.addEventListener("click", () => {
+          if (startTime === null) {
+            startFast();
+          } else {
+            hideNotice();
+            finishFast();
+          }
+        });
+
+        goalBadge.addEventListener("click", () => {
+          if (startTime !== null) return;
+          durationHoursInput.value = String(selectedDurationHours);
+          durationDialog.showModal();
+          durationHoursInput.focus();
+          durationHoursInput.select();
+        });
+
+        cancelDuration.addEventListener("click", () => durationDialog.close());
+
+        durationForm.addEventListener("submit", (event) => {
+          event.preventDefault();
+          if (!durationHoursInput.reportValidity()) return;
+
+          const hours = Number(durationHoursInput.value);
+          if (!Number.isInteger(hours) || hours < 1 || hours > maxDurationHours) {
+            durationHoursInput.setCustomValidity("Введите целое число от 1 до 168.");
+            durationHoursInput.reportValidity();
+            durationHoursInput.setCustomValidity("");
+            return;
+          }
+          if (!saveSelectedDuration(hours)) return;
+
+          selectedDurationHours = hours;
+          activeDurationMs = selectedDurationHours * hourMs;
+          updateGoalBadge();
+          durationDialog.close();
+        });
+
+        const weekdays = ["ВС", "ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ"];
+        const today = new Date().getDay();
+        const week = document.getElementById("week");
+        for (let offset = -5; offset <= 1; offset += 1) {
+          const dayNumber = (today + offset + 7) % 7;
+          const day = document.createElement("div");
+          day.className = "day";
+          if (offset === 0) day.classList.add("is-complete");
+          day.innerHTML = `<span>${weekdays[dayNumber]}</span><span class="day-ring" aria-hidden="true"></span>`;
+          week.append(day);
+        }
+
+        selectedDurationHours = readSelectedDuration();
+        activeDurationMs = selectedDurationHours * hourMs;
+        updateGoalBadge();
+        lastFastEndTime = readLastFastEndTime();
+        startTime = readStartTime();
+        if (startTime !== null) {
+          activeDurationMs = readActiveDuration();
+          updateGoalBadge();
+          timerCard.classList.add("is-active");
+          timerAction.textContent = "Завершить пост";
+          updateTimer();
+          ticker = window.setInterval(updateTimer, 1000);
+        } else {
+          renderDaysSinceLastFast();
+          dayTicker = window.setInterval(renderDaysSinceLastFast, 60000);
+        }
+      })();
+    </script>
+  </body>
+</html>
