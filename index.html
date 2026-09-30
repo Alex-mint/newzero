@@ -132,6 +132,210 @@
       }
       .goal-badge:disabled { cursor: default; }
 
+      .history-dialog {
+        width: min(480px, calc(100vw - 24px));
+        max-height: min(680px, calc(100dvh - 32px));
+        overflow: hidden;
+        padding: 0;
+        border: 1px solid #393539;
+        border-radius: 18px;
+        background: #171617;
+        color: #f7f5f6;
+        box-shadow: 0 24px 80px #000b;
+      }
+
+      .history-dialog[open] {
+        position: fixed;
+        inset: 24px 0 auto;
+        margin: 0 auto;
+      }
+
+      .history-dialog::backdrop { background: #000b; backdrop-filter: blur(5px); }
+
+      .history-panel {
+        display: grid;
+        max-height: inherit;
+        grid-template-rows: auto auto minmax(0, 1fr);
+      }
+
+      .history-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 22px 24px 16px;
+      }
+
+      .history-eyebrow {
+        margin: 0 0 5px;
+        color: var(--accent);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .history-heading h2 { margin: 0; font-size: 24px; }
+
+      .history-close {
+        display: grid;
+        width: 40px;
+        height: 40px;
+        flex: 0 0 auto;
+        place-items: center;
+        border: 0;
+        border-radius: 50%;
+        background: #292729;
+        color: #e1dce0;
+        cursor: pointer;
+      }
+
+      .history-close:hover { background: #393639; }
+      .history-close svg { width: 20px; height: 20px; }
+
+      .history-summary {
+        display: flex;
+        align-items: baseline;
+        gap: 9px;
+        margin: 0 24px 10px;
+        padding: 12px 15px;
+        border: 1px solid #383538;
+        border-radius: 10px;
+        background: #201e20;
+      }
+
+      .history-count { color: var(--green); font-size: 22px; font-weight: 800; }
+      .history-count-label { color: #c9c5c8; font-size: 13px; }
+
+      .history-scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+
+      .history-list {
+        margin: 0;
+        padding: 0 24px 12px;
+        list-style: none;
+      }
+
+      .history-entry {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 5px 14px;
+        padding: 15px 0;
+        border-bottom: 1px solid #302e30;
+      }
+
+      .history-date { color: #e5e1e4; font-size: 14px; font-weight: 700; }
+      .history-duration { color: var(--green); font-size: 15px; font-weight: 800; }
+      .history-details { grid-column: 1 / -1; color: var(--muted); font-size: 12px; }
+      .history-entry-actions {
+        display: flex;
+        grid-column: 1 / -1;
+        justify-content: flex-end;
+        gap: 14px;
+        margin-top: 3px;
+      }
+
+      .history-action {
+        display: inline-flex;
+        min-height: 34px;
+        align-items: center;
+        gap: 6px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: #c9c5c8;
+        cursor: pointer;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .history-action:hover { color: #fff; }
+      .history-action-danger { color: #ff8588; }
+      .history-action-danger:hover { color: #ffb0b2; }
+      .history-action svg { width: 16px; height: 16px; }
+
+      .history-editor {
+        display: grid;
+        grid-column: 1 / -1;
+        gap: 12px;
+        margin-top: 7px;
+        padding: 14px;
+        border: 1px solid #383538;
+        border-radius: 10px;
+        background: #201e20;
+      }
+
+      .history-editor[hidden] { display: none; }
+      .history-editor-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+      .history-field {
+        display: grid;
+        min-width: 0;
+        gap: 6px;
+        color: #c9c5c8;
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .history-field input, .history-field textarea {
+        width: 100%;
+        min-height: 40px;
+        padding: 8px 10px;
+        border: 1px solid #484348;
+        border-radius: 7px;
+        background: #111;
+        color: #fff;
+        font: inherit;
+        font-size: 13px;
+      }
+
+      .history-field textarea { min-height: 72px; resize: vertical; }
+      .history-field input:focus-visible, .history-field textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+      .history-editor-error {
+        margin: 0;
+        color: #ff8588;
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .history-editor-error[hidden] { display: none; }
+
+      .history-editor-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .history-editor-actions .dialog-button { min-height: 38px; padding: 0 13px; font-size: 13px; }
+
+      .history-empty {
+        display: grid;
+        justify-items: center;
+        gap: 10px;
+        padding: 34px 24px 40px;
+        color: #e5e1e4;
+        text-align: center;
+      }
+
+      .history-empty[hidden] { display: none; }
+      .history-empty svg { width: 42px; height: 42px; color: var(--accent); }
+      .history-empty p { margin: 0; font-size: 16px; font-weight: 700; }
+      .history-empty span { max-width: 280px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+      @media (max-width: 520px) {
+        .history-dialog[open] {
+          position: fixed;
+          inset: max(12px, env(safe-area-inset-top)) 0 auto;
+          width: calc(100% - 16px);
+          max-height: calc(100dvh - 32px);
+          margin: 0 auto;
+          border-radius: 18px;
+        }
+
+        .history-heading { padding: 20px 20px 14px; }
+        .history-summary { margin-right: 20px; margin-left: 20px; }
+        .history-list { padding-right: 20px; padding-left: 20px; }
+        .history-editor-row { grid-template-columns: 1fr; }
+      }
+
       .duration-dialog {
         width: min(420px, calc(100vw - 32px));
         padding: 0;
@@ -143,6 +347,50 @@
       }
 
       .duration-dialog::backdrop { background: #000b; }
+
+      .data-panel {
+        display: grid;
+        gap: 16px;
+        padding: 22px;
+      }
+
+      .data-heading {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .data-heading h2 { margin: 0; font-size: 22px; }
+      .data-heading .history-eyebrow { margin-bottom: 5px; }
+      .data-copy { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+
+      .data-actions { display: grid; gap: 10px; }
+
+      .data-action {
+        display: flex;
+        min-height: 52px;
+        align-items: center;
+        gap: 12px;
+        padding: 0 14px;
+        border: 1px solid #393539;
+        border-radius: 9px;
+        background: #201e20;
+        color: #f7f5f6;
+        cursor: pointer;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        text-align: left;
+      }
+
+      .data-action:hover { border-color: #6c5962; background: #292729; }
+      .data-action svg { width: 21px; height: 21px; flex: 0 0 auto; color: var(--accent); }
+      .data-status { margin: 0; color: var(--green); font-size: 13px; line-height: 1.45; }
+      .data-status.is-error { color: #ff8588; }
+      .data-status[hidden] { display: none; }
+
+      .data-file-input { display: none; }
 
       .duration-form {
         display: grid;
@@ -337,44 +585,6 @@
       .info-copy strong { font-size: 23px; font-weight: 750; }
       .info-copy span { color: #bcb9bc; font-size: 21px; }
 
-      .promo-card {
-        position: relative;
-        min-height: 180px;
-        overflow: hidden;
-        margin-top: 24px;
-        padding: 32px;
-        border-radius: 12px;
-        background: linear-gradient(125deg, #202020 10%, #141414 75%);
-      }
-
-      .promo-card h2 {
-        max-width: 330px;
-        margin: 0 0 10px;
-        font-size: 24px;
-      }
-
-      .promo-card p {
-        max-width: 260px;
-        margin: 0;
-        color: #d6d3d5;
-        font-size: 21px;
-      }
-
-      .promo-art {
-        position: absolute;
-        right: -5px;
-        bottom: -30px;
-        display: grid;
-        width: 155px;
-        height: 125px;
-        place-items: center;
-        border: 8px solid #373438;
-        border-radius: 25px;
-        background: radial-gradient(ellipse at 50% 45%, #e1b274 0 22%, #5b8047 23% 37%, #3c2c23 38% 50%, #b6a183 51% 59%, #222 60%);
-        box-shadow: 0 0 0 2px #100f10;
-        font-size: 50px;
-      }
-
       .bottom-nav {
         position: fixed;
         z-index: 5;
@@ -447,7 +657,7 @@
   <body>
     <main class="app">
       <header class="topbar">
-        <button class="icon-button" type="button" aria-label="История постов">
+        <button class="icon-button" id="historyTopBtn" type="button" aria-label="История постов" aria-haspopup="dialog" aria-controls="historyDialog">
           <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
             <circle cx="16" cy="16" r="12.2" stroke="currentColor" stroke-width="2.3"/>
             <path d="m10.5 16.2 3.7 3.7 7.6-8" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
@@ -487,12 +697,33 @@
         </div>
       </section>
 
-      <section class="promo-card" aria-label="Ритм Плюс">
-        <h2>Больше, чем пост</h2>
-        <p>Для участников «Ритм Плюс»</p>
-        <div class="promo-art" aria-hidden="true">🥗</div>
-      </section>
     </main>
+
+    <dialog class="history-dialog" id="historyDialog" aria-labelledby="historyTitle">
+      <div class="history-panel">
+        <header class="history-heading">
+          <div>
+            <p class="history-eyebrow">ВАШ РИТМ</p>
+            <h2 id="historyTitle">История постов</h2>
+          </div>
+          <button class="history-close" id="closeHistory" type="button" aria-label="Закрыть историю">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </header>
+        <div class="history-summary" aria-live="polite">
+          <span class="history-count" id="historyCount">0</span>
+          <span class="history-count-label" id="historyCountLabel">завершённых постов</span>
+        </div>
+        <div class="history-scroll">
+          <div class="history-empty" id="historyEmpty" hidden>
+            <svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="24" r="19" stroke="currentColor" stroke-width="3"/><path d="M24 13v12l8 5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <p>Здесь появятся ваши посты</p>
+            <span>Завершите первый пост, и он сохранится в этой истории.</span>
+          </div>
+          <ul class="history-list" id="historyList" aria-label="Завершённые посты"></ul>
+        </div>
+      </div>
+    </dialog>
 
     <dialog class="duration-dialog" id="durationDialog" aria-labelledby="durationTitle">
       <form class="duration-form" id="durationForm">
@@ -509,12 +740,39 @@
       </form>
     </dialog>
 
+    <dialog class="duration-dialog" id="dataDialog" aria-labelledby="dataTitle">
+      <div class="data-panel">
+        <header class="data-heading">
+          <div>
+            <p class="history-eyebrow">РИТМ</p>
+            <h2 id="dataTitle">Перенос данных</h2>
+          </div>
+          <button class="history-close" id="closeDataDialog" type="button" aria-label="Закрыть">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </header>
+        <p class="data-copy">История постов, комментарии, цель и текущий таймер.</p>
+        <div class="data-actions">
+          <button class="data-action" id="exportDataButton" type="button">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 15V3m0 0L7.5 7.5M12 3l4.5 4.5M4 14v6h16v-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Экспортировать данные</span>
+          </button>
+          <button class="data-action" id="importDataButton" type="button">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 9v12m0 0 4.5-4.5M12 21l-4.5-4.5M4 10V4h16v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Импортировать из файла</span>
+          </button>
+          <input class="data-file-input" id="importDataFile" type="file" accept=".json,application/json" aria-label="Выбрать файл резервной копии">
+        </div>
+        <p class="data-status" id="dataStatus" role="status" hidden></p>
+      </div>
+    </dialog>
+
     <nav class="bottom-nav" aria-label="Основная навигация">
       <button class="nav-item is-current" type="button" aria-current="page">
         <svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" stroke-width="6"/><circle cx="18" cy="18" r="6" fill="currentColor"/></svg>
         <span>Сегодня</span>
       </button>
-      <button class="nav-item" type="button">
+      <button class="nav-item" id="overviewNavBtn" type="button" aria-haspopup="dialog" aria-controls="historyDialog">
         <svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15" fill="currentColor"/><path d="m22.5 9-2.7 8.4-8.3 3 11-11.4Zm-9 17 2.6-6.2 6.5-2.5L13.5 26Z" fill="#171717"/></svg>
         <span>Обзор</span>
       </button>
@@ -522,7 +780,7 @@
         <svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15" fill="currentColor"/><circle cx="18" cy="14" r="5" fill="#171717"/><path d="M8.5 27c1.2-5.1 4.4-7.7 9.5-7.7s8.3 2.6 9.5 7.7" fill="#171717"/></svg>
         <span>Профиль</span>
       </button>
-      <button class="nav-item" type="button">
+      <button class="nav-item" id="dataNavBtn" type="button" aria-haspopup="dialog" aria-controls="dataDialog">
         <svg viewBox="0 0 36 36" aria-hidden="true"><path d="M18 2c2.2 6.8-1.1 8.8 2.5 12.5 1.6-2.1 2-4.2 1.8-6.1 5 3.6 8.2 8.7 8.2 14.1A12.5 12.5 0 0 1 18 35 12.5 12.5 0 0 1 5.5 22.5c0-5.8 3.4-11.2 9.6-16.2-.5 5.1.1 7.7 1.9 9.2C19.2 11.4 18.6 7 18 2Z" fill="currentColor"/><path d="M18 19c3 3.3 4.3 5.4 4.3 7.7a4.3 4.3 0 0 1-8.6 0c0-2.3 1.3-4.4 4.3-7.7Z" fill="#171717"/></svg>
         <span>Ритм Плюс</span>
       </button>
@@ -538,6 +796,15 @@
         const selectedDurationStorageKey = "zero-selected-duration-hours";
         const activeDurationStorageKey = "zero-active-duration-ms";
         const lastFastEndStorageKey = "zero-last-fast-end-time";
+        const fastHistoryStorageKey = "zero-fast-history";
+        const backupStorageKeys = {
+          startTime: storageKey,
+          legacyEndTime: legacyEndTimeStorageKey,
+          selectedDurationHours: selectedDurationStorageKey,
+          activeDurationMs: activeDurationStorageKey,
+          lastFastEndTime: lastFastEndStorageKey,
+          fastHistory: fastHistoryStorageKey
+        };
         const circumference = 2 * Math.PI * 182;
         const visibleArc = circumference * 0.975;
         const ring = document.getElementById("progressRing");
@@ -552,6 +819,30 @@
         const clockTime = document.getElementById("clockTime");
         const clockCaption = document.getElementById("clockCaption");
         const notice = document.getElementById("notice");
+        const historyDialog = document.getElementById("historyDialog");
+        const historyTopButton = document.getElementById("historyTopBtn");
+        const overviewNavButton = document.getElementById("overviewNavBtn");
+        const closeHistoryButton = document.getElementById("closeHistory");
+        const historyCount = document.getElementById("historyCount");
+        const historyCountLabel = document.getElementById("historyCountLabel");
+        const historyEmpty = document.getElementById("historyEmpty");
+        const historyList = document.getElementById("historyList");
+        const dataDialog = document.getElementById("dataDialog");
+        const dataNavButton = document.getElementById("dataNavBtn");
+        const closeDataDialogButton = document.getElementById("closeDataDialog");
+        const exportDataButton = document.getElementById("exportDataButton");
+        const importDataButton = document.getElementById("importDataButton");
+        const importDataFile = document.getElementById("importDataFile");
+        const dataStatus = document.getElementById("dataStatus");
+        const historyDateFormatter = new Intl.DateTimeFormat("ru-RU", {
+          day: "numeric",
+          month: "long",
+          year: "numeric"
+        });
+        const historyTimeFormatter = new Intl.DateTimeFormat("ru-RU", {
+          hour: "2-digit",
+          minute: "2-digit"
+        });
         let selectedDurationHours = 36;
         let activeDurationMs = selectedDurationHours * hourMs;
         let startTime = null;
@@ -570,6 +861,440 @@
           notice.textContent = "";
           notice.hidden = true;
         }
+
+        function setDataStatus(message, isError = false) {
+          dataStatus.textContent = message;
+          dataStatus.classList.toggle("is-error", isError);
+          dataStatus.hidden = false;
+        }
+
+        function readBackupStorage() {
+          return Object.fromEntries(Object.entries(backupStorageKeys)
+            .map(([name, key]) => [name, localStorage.getItem(key)]));
+        }
+
+        function validateBackup(backup) {
+          if (!backup || backup.app !== "ritm" || backup.version !== 1 || !backup.data || typeof backup.data !== "object") return false;
+          const data = backup.data;
+          const names = Object.keys(backupStorageKeys);
+          if (names.some((name) => !Object.hasOwn(data, name) || (data[name] !== null && typeof data[name] !== "string"))) return false;
+
+          const readNumber = (name) => {
+            if (data[name] === null || data[name].trim() === "") return null;
+            const value = Number(data[name]);
+            return Number.isFinite(value) ? value : null;
+          };
+          const start = readNumber("startTime");
+          const legacyEnd = readNumber("legacyEndTime");
+          const selectedHours = readNumber("selectedDurationHours");
+          const activeDuration = readNumber("activeDurationMs");
+          const lastEnd = readNumber("lastFastEndTime");
+          if (data.startTime !== null && (start === null || start <= 0 || start > Date.now())) return false;
+          if (data.legacyEndTime !== null && (legacyEnd === null || legacyEnd <= 0 || legacyEnd > Date.now() + maxDurationHours * hourMs)) return false;
+          if (data.selectedDurationHours !== null && (!Number.isInteger(selectedHours) || selectedHours < 1 || selectedHours > maxDurationHours)) return false;
+          if (data.activeDurationMs !== null && (activeDuration === null || activeDuration < hourMs || activeDuration > maxDurationHours * hourMs)) return false;
+          if (data.lastFastEndTime !== null && (lastEnd === null || lastEnd <= 0 || lastEnd > Date.now())) return false;
+
+          if (data.fastHistory === null) return true;
+          let history;
+          try {
+            history = JSON.parse(data.fastHistory);
+          } catch {
+            return false;
+          }
+          return Array.isArray(history)
+            && history.length <= 100
+            && history.every((entry) => entry
+              && Number.isFinite(entry.startedAt)
+              && Number.isFinite(entry.endedAt)
+              && Number.isFinite(entry.durationMs)
+              && Number.isFinite(entry.goalMs)
+              && entry.startedAt > 0
+              && entry.startedAt <= Date.now()
+              && entry.endedAt >= entry.startedAt
+              && entry.endedAt <= Date.now()
+              && entry.durationMs >= 0
+              && entry.goalMs >= hourMs
+              && entry.goalMs <= maxDurationHours * hourMs
+              && (entry.id === undefined || typeof entry.id === "string")
+              && (entry.comment === undefined || (typeof entry.comment === "string" && entry.comment.length <= 500)));
+        }
+
+        function writeBackupStorage(data) {
+          for (const [name, key] of Object.entries(backupStorageKeys)) {
+            if (data[name] === null) localStorage.removeItem(key);
+            else localStorage.setItem(key, data[name]);
+          }
+        }
+
+        function refreshAppFromStorage() {
+          if (ticker !== null) window.clearInterval(ticker);
+          if (dayTicker !== null) window.clearInterval(dayTicker);
+          ticker = null;
+          dayTicker = null;
+          timerCard.classList.remove("is-active", "is-goal-reached");
+          selectedDurationHours = readSelectedDuration();
+          activeDurationMs = readActiveDuration();
+          lastFastEndTime = readLastFastEndTime();
+          startTime = readStartTime();
+          updateGoalBadge();
+
+          if (startTime !== null) {
+            activeDurationMs = readActiveDuration();
+            timerCard.classList.add("is-active");
+            timerAction.textContent = "Завершить пост";
+            updateTimer();
+            ticker = window.setInterval(updateTimer, 1000);
+          } else {
+            timerAction.textContent = "Начать пост";
+            renderDaysSinceLastFast();
+            dayTicker = window.setInterval(renderDaysSinceLastFast, 60000);
+          }
+          renderHistory();
+        }
+
+        function formatPostCount(count) {
+          const remainder = count % 10;
+          const lastTwoDigits = count % 100;
+          if (remainder === 1 && lastTwoDigits !== 11) return "завершённый пост";
+          if (remainder >= 2 && remainder <= 4 && (lastTwoDigits < 12 || lastTwoDigits > 14)) return "завершённых поста";
+          return "завершённых постов";
+        }
+
+        function formatDuration(durationMs) {
+          const totalMinutes = Math.floor(Math.max(0, durationMs) / 60000);
+          const hours = Math.floor(totalMinutes / 60);
+          const minutes = totalMinutes % 60;
+          if (totalMinutes === 0) return "менее минуты";
+          if (hours === 0) return `${minutes} мин`;
+          return minutes === 0 ? `${hours} ч` : `${hours} ч ${minutes} мин`;
+        }
+
+        function formatDateTimeLocal(timestamp) {
+          const date = new Date(timestamp);
+          const pad = (value) => String(value).padStart(2, "0");
+          return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        }
+
+        function readFastHistory() {
+          try {
+            const saved = JSON.parse(localStorage.getItem(fastHistoryStorageKey) || "[]");
+            if (!Array.isArray(saved)) return [];
+            return saved
+              .filter((entry) => entry
+                && Number.isFinite(entry.startedAt)
+                && Number.isFinite(entry.endedAt)
+                && Number.isFinite(entry.durationMs)
+                && Number.isFinite(entry.goalMs)
+                && entry.startedAt > 0
+                && entry.endedAt >= entry.startedAt
+                && entry.goalMs > 0)
+              .map((entry, index) => ({
+                ...entry,
+                id: typeof entry.id === "string" ? entry.id : `legacy-${entry.startedAt}-${entry.endedAt}-${index}`,
+                comment: typeof entry.comment === "string" ? entry.comment : ""
+              }))
+              .sort((first, second) => second.endedAt - first.endedAt);
+          } catch {
+            showNotice("Не удалось загрузить историю постов из памяти браузера.");
+            return [];
+          }
+        }
+
+        function saveFastHistory(entry) {
+          try {
+            const saved = JSON.parse(localStorage.getItem(fastHistoryStorageKey) || "[]");
+            const history = Array.isArray(saved) ? saved : [];
+            history.unshift({
+              ...entry,
+              id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+              comment: ""
+            });
+            localStorage.setItem(fastHistoryStorageKey, JSON.stringify(history.slice(0, 100)));
+          } catch {
+            showNotice("Пост завершён, но сохранить его в истории не удалось.");
+          }
+        }
+
+        function createHistoryAction(label, action, entryId, iconMarkup, isDanger = false) {
+          const button = document.createElement("button");
+          button.className = isDanger ? "history-action history-action-danger" : "history-action";
+          button.type = "button";
+          button.dataset.historyAction = action;
+          button.dataset.entryId = entryId;
+          button.setAttribute("aria-label", `${label} пост`);
+          button.innerHTML = `${iconMarkup}<span>${label}</span>`;
+          return button;
+        }
+
+        function createHistoryField(labelText, name, value, type) {
+          const label = document.createElement("label");
+          label.className = "history-field";
+          label.append(labelText);
+          const input = document.createElement("input");
+          input.type = type;
+          input.name = name;
+          input.value = value;
+          input.required = true;
+          label.append(input);
+          return label;
+        }
+
+        function renderHistory() {
+          const entries = readFastHistory();
+          historyCount.textContent = String(entries.length);
+          historyCountLabel.textContent = formatPostCount(entries.length);
+          historyEmpty.hidden = entries.length > 0;
+          historyList.replaceChildren();
+
+          for (const entry of entries) {
+            const item = document.createElement("li");
+            item.className = "history-entry";
+
+            const date = document.createElement("time");
+            date.className = "history-date";
+            date.dateTime = new Date(entry.endedAt).toISOString();
+            date.textContent = historyDateFormatter.format(entry.endedAt);
+
+            const duration = document.createElement("span");
+            duration.className = "history-duration";
+            duration.textContent = formatDuration(entry.durationMs);
+
+            const details = document.createElement("span");
+            details.className = "history-details";
+            details.textContent = `Старт в ${historyTimeFormatter.format(entry.startedAt)} · цель ${formatDuration(entry.goalMs)}`;
+
+            item.append(date, duration, details);
+
+            const actions = document.createElement("div");
+            actions.className = "history-entry-actions";
+            actions.append(
+              createHistoryAction("Изменить", "edit", entry.id,
+                '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 16.5V20h3.5L19 8.5 15.5 5 4 16.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m13.5 7 3.5 3.5" stroke="currentColor" stroke-width="1.8"/></svg>'),
+              createHistoryAction("Удалить", "delete", entry.id,
+                '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>', true)
+            );
+
+            const editor = document.createElement("form");
+            editor.className = "history-editor";
+            editor.dataset.entryId = entry.id;
+            editor.hidden = true;
+
+            const timeFields = document.createElement("div");
+            timeFields.className = "history-editor-row";
+            timeFields.append(
+              createHistoryField("Начало", "startedAt", formatDateTimeLocal(entry.startedAt), "datetime-local"),
+              createHistoryField("Завершение", "endedAt", formatDateTimeLocal(entry.endedAt), "datetime-local")
+            );
+
+            const commentLabel = document.createElement("label");
+            commentLabel.className = "history-field";
+            commentLabel.append("Комментарий");
+            const commentInput = document.createElement("textarea");
+            commentInput.name = "comment";
+            commentInput.maxLength = 500;
+            commentInput.rows = 3;
+            commentInput.value = entry.comment;
+            commentInput.placeholder = "Добавьте заметку к посту";
+            commentLabel.append(commentInput);
+
+            const error = document.createElement("p");
+            error.className = "history-editor-error";
+            error.setAttribute("role", "alert");
+            error.hidden = true;
+
+            const editorActions = document.createElement("div");
+            editorActions.className = "history-editor-actions";
+            const cancelButton = document.createElement("button");
+            cancelButton.className = "dialog-button";
+            cancelButton.type = "button";
+            cancelButton.dataset.historyAction = "cancel-edit";
+            cancelButton.dataset.entryId = entry.id;
+            cancelButton.textContent = "Отмена";
+            const saveButton = document.createElement("button");
+            saveButton.className = "dialog-button dialog-button-primary";
+            saveButton.type = "submit";
+            saveButton.textContent = "Сохранить";
+            editorActions.append(cancelButton, saveButton);
+            editor.append(timeFields, commentLabel, error, editorActions);
+            item.append(actions, editor);
+            historyList.append(item);
+          }
+        }
+
+        function syncLastFastEndTime(entries) {
+          const latest = entries.reduce((newest, entry) => Math.max(newest, entry.endedAt), 0);
+          if (latest === 0) {
+            lastFastEndTime = null;
+            try {
+              localStorage.removeItem(lastFastEndStorageKey);
+            } catch {
+              showNotice("Не удалось обновить время последнего поста.");
+            }
+          } else {
+            saveLastFastEndTime(latest);
+          }
+          if (startTime === null) renderDaysSinceLastFast();
+          else updateTimer();
+        }
+
+        historyList.addEventListener("click", (event) => {
+          const button = event.target.closest("button[data-history-action]");
+          if (!button) return;
+
+          const entryId = button.dataset.entryId;
+          const editor = Array.from(historyList.querySelectorAll(".history-editor"))
+            .find((form) => form.dataset.entryId === entryId);
+
+          if (button.dataset.historyAction === "edit" && editor) {
+            editor.hidden = false;
+            editor.querySelector('[name="startedAt"]').focus();
+            return;
+          }
+
+          if (button.dataset.historyAction === "cancel-edit" && editor) {
+            editor.reset();
+            editor.hidden = true;
+            return;
+          }
+
+          if (button.dataset.historyAction === "delete"
+            && window.confirm("Удалить этот пост из истории? Это действие нельзя отменить.")) {
+            const remaining = readFastHistory().filter((entry) => entry.id !== entryId);
+            try {
+              localStorage.setItem(fastHistoryStorageKey, JSON.stringify(remaining));
+              syncLastFastEndTime(remaining);
+              renderHistory();
+            } catch {
+              showNotice("Не удалось удалить пост из истории.");
+            }
+          }
+        });
+
+        historyList.addEventListener("submit", (event) => {
+          const editor = event.target.closest(".history-editor");
+          if (!editor) return;
+          event.preventDefault();
+
+          const startedAt = new Date(editor.elements.namedItem("startedAt").value).getTime();
+          const endedAt = new Date(editor.elements.namedItem("endedAt").value).getTime();
+          const error = editor.querySelector(".history-editor-error");
+          if (!Number.isFinite(startedAt) || !Number.isFinite(endedAt) || endedAt <= startedAt || endedAt > Date.now()) {
+            error.textContent = "Укажите корректное время: завершение должно быть позже начала и не в будущем.";
+            error.hidden = false;
+            return;
+          }
+
+          const entries = readFastHistory();
+          const entryIndex = entries.findIndex((entry) => entry.id === editor.dataset.entryId);
+          if (entryIndex === -1) return;
+          entries[entryIndex] = {
+            ...entries[entryIndex],
+            startedAt,
+            endedAt,
+            durationMs: endedAt - startedAt,
+            comment: editor.elements.namedItem("comment").value.trim()
+          };
+
+          try {
+            localStorage.setItem(fastHistoryStorageKey, JSON.stringify(entries));
+            syncLastFastEndTime(entries);
+            renderHistory();
+          } catch {
+            error.textContent = "Не удалось сохранить изменения. Попробуйте ещё раз.";
+            error.hidden = false;
+          }
+        });
+
+        function openHistory() {
+          renderHistory();
+          historyDialog.showModal();
+        }
+
+        historyTopButton.addEventListener("click", openHistory);
+        overviewNavButton.addEventListener("click", openHistory);
+        closeHistoryButton.addEventListener("click", () => historyDialog.close());
+        historyDialog.addEventListener("click", (event) => {
+          if (event.target === historyDialog) historyDialog.close();
+        });
+
+        dataNavButton.addEventListener("click", () => {
+          dataStatus.hidden = true;
+          dataDialog.showModal();
+        });
+        closeDataDialogButton.addEventListener("click", () => dataDialog.close());
+        dataDialog.addEventListener("click", (event) => {
+          if (event.target === dataDialog) dataDialog.close();
+        });
+
+        exportDataButton.addEventListener("click", () => {
+          try {
+            const backup = {
+              app: "ritm",
+              version: 1,
+              exportedAt: new Date().toISOString(),
+              data: readBackupStorage()
+            };
+            const file = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(file);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `ritm-backup-${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.append(link);
+            link.click();
+            link.remove();
+            window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+            setDataStatus("Резервная копия скачана.");
+          } catch {
+            setDataStatus("Не удалось создать резервную копию.", true);
+          }
+        });
+
+        importDataButton.addEventListener("click", () => {
+          dataStatus.hidden = true;
+          importDataFile.click();
+        });
+
+        importDataFile.addEventListener("change", async () => {
+          const file = importDataFile.files[0];
+          if (!file) return;
+
+          try {
+            if (file.size > 2_000_000) {
+              setDataStatus("Файл слишком большой для резервной копии.", true);
+              return;
+            }
+            let backup;
+            try {
+              backup = JSON.parse(await file.text());
+            } catch {
+              setDataStatus("Не удалось прочитать JSON-файл.", true);
+              return;
+            }
+            if (!validateBackup(backup)) {
+              setDataStatus("Файл не распознан или содержит некорректные данные.", true);
+              return;
+            }
+            if (!window.confirm("Импорт заменит текущие данные Ритма. Продолжить?")) return;
+
+            const previousData = readBackupStorage();
+            try {
+              writeBackupStorage(backup.data);
+            } catch {
+              writeBackupStorage(previousData);
+              setDataStatus("Не удалось сохранить данные из файла.", true);
+              return;
+            }
+
+            dataDialog.close();
+            refreshAppFromStorage();
+            showNotice("Данные успешно импортированы.");
+          } catch {
+            setDataStatus("Не удалось импортировать данные.", true);
+          } finally {
+            importDataFile.value = "";
+          }
+        });
 
         function saveStartTime(value) {
           try {
@@ -717,6 +1442,8 @@
 
         function finishFast() {
           const finishedAt = Date.now();
+          const previousStartTime = startTime;
+          const elapsedMs = Math.max(0, finishedAt - previousStartTime);
           startTime = null;
           if (ticker !== null) {
             window.clearInterval(ticker);
@@ -728,6 +1455,12 @@
           }
           saveStartTime(null);
           saveLastFastEndTime(finishedAt);
+          saveFastHistory({
+            startedAt: previousStartTime,
+            endedAt: finishedAt,
+            durationMs: elapsedMs,
+            goalMs: activeDurationMs
+          });
           timerCard.classList.remove("is-active", "is-goal-reached");
           timerAction.textContent = "Начать пост";
           updateGoalBadge();
