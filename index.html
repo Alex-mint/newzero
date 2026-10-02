@@ -393,9 +393,10 @@
       .data-file-input { display: none; }
 
       .calendar-grid {
+        --cal-gap: 4px;
         display: grid;
         grid-template-columns: repeat(7, 1fr);
-        gap: 4px;
+        gap: var(--cal-gap);
         padding: 16px 22px 22px;
       }
 
@@ -434,15 +435,58 @@
       .calendar-day.has-post::after {
         content: "";
         position: absolute;
-        inset: -3px;
+        inset: -3px calc(var(--cal-gap) * -0.5);
         border: 2px solid var(--green);
-        border-radius: 50%;
+        background: rgba(8, 210, 121, 0.09);
         pointer-events: none;
+      }
+      .calendar-day.has-post.has-post-start:not(.has-post-end)::after {
+        border-radius: 999px 0 0 999px;
+      }
+      .calendar-day.has-post.has-post-end:not(.has-post-start)::after {
+        border-radius: 0 999px 999px 0;
+      }
+      .calendar-day.has-post.has-post-start.has-post-end::after {
+        border-radius: 50%;
+      }
+      .calendar-day.has-post.has-post-middle::after {
+        border-radius: 0;
+        border-left-color: transparent;
+        border-right-color: transparent;
       }
       .calendar-day.has-post.is-today::after { border-color: var(--green); }
 
+      .post-detail-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .post-detail-item {
+        display: grid;
+        gap: 6px;
+        padding: 15px;
+        border: 1px solid #383538;
+        border-radius: 10px;
+        background: #201e20;
+      }
+
+      .post-detail-date { color: #e5e1e4; font-size: 14px; font-weight: 700; }
+      .post-detail-duration { color: var(--green); font-size: 15px; font-weight: 800; }
+      .post-detail-meta { color: var(--muted); font-size: 12px; line-height: 1.5; }
+      .post-detail-comment {
+        padding-top: 6px;
+        border-top: 1px solid #302e30;
+        color: #c9c5c8;
+        font-size: 13px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+
+      #postDetailActions { margin-top: 18px; }
+
       @media (max-width: 420px) {
-        .calendar-grid { padding: 12px 16px 16px; gap: 3px; }
+        .calendar-grid { --cal-gap: 3px; padding: 12px 16px 16px; gap: var(--cal-gap); }
         .calendar-day { font-size: 14px; }
         .calendar-weekday { font-size: 11px; }
       }
@@ -885,6 +929,25 @@
       </div>
     </dialog>
 
+    <dialog class="duration-dialog" id="postDetailDialog" aria-labelledby="postDetailTitle">
+      <div class="data-panel">
+        <header class="data-heading">
+          <div>
+            <p class="history-eyebrow">ПОСТ</p>
+            <h2 id="postDetailTitle">Детали поста</h2>
+          </div>
+          <button class="history-close" id="closePostDetail" type="button" aria-label="Закрыть">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </header>
+        <div class="post-detail-list" id="postDetailList"></div>
+        <div class="duration-actions" id="postDetailActions">
+          <button class="dialog-button" id="deletePostFromDetail" type="button">Удалить пост</button>
+          <button class="dialog-button dialog-button-primary" id="closePostDetailAction" type="button">Закрыть</button>
+        </div>
+      </div>
+    </dialog>
+
     <dialog class="duration-dialog" id="addPostDialog" aria-labelledby="addPostTitle">
       <form class="duration-form" id="addPostForm">
         <h2 id="addPostTitle">Добавить пост</h2>
@@ -986,6 +1049,13 @@
         const addPostButton = document.getElementById("addPostBtn");
         const addPostForm = document.getElementById("addPostForm");
         const cancelAddPostButton = document.getElementById("cancelAddPost");
+        const postDetailDialog = document.getElementById("postDetailDialog");
+        const postDetailTitle = document.getElementById("postDetailTitle");
+        const postDetailList = document.getElementById("postDetailList");
+        const closePostDetailButton = document.getElementById("closePostDetail");
+        const closePostDetailAction = document.getElementById("closePostDetailAction");
+        const deletePostFromDetail = document.getElementById("deletePostFromDetail");
+        let detailEntryIds = [];
         const historyDateFormatter = new Intl.DateTimeFormat("ru-RU", {
           day: "numeric",
           month: "long",
@@ -1196,7 +1266,7 @@
 
         function renderWeek() {
           const week = document.getElementById("week");
-          const postDates = getPostDates();
+          const postDates = getPostDateSet();
           const now = new Date();
           const today = (now.getDay() + 6) % 7;
           const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - today);
@@ -1302,18 +1372,31 @@
           }
         }
 
-        function getPostDates() {
-          const entries = readFastHistory();
+        function dateKey(year, month, day) {
+          const date = new Date(year, month, day);
+          return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+        }
+
+        function getPostDateSet() {
           const dates = new Set();
-          for (const entry of entries) {
-            const date = new Date(entry.endedAt);
-            dates.add(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`);
+          for (const entry of readFastHistory()) {
+            const startDate = new Date(entry.startedAt);
+            const endDate = new Date(entry.endedAt);
+            startDate.setHours(0, 0, 0, 0);
+            endDate.setHours(0, 0, 0, 0);
+            const cursor = new Date(startDate);
+            let guard = 0;
+            while (cursor.getTime() <= endDate.getTime() && guard < 4000) {
+              dates.add(dateKey(cursor.getFullYear(), cursor.getMonth(), cursor.getDate()));
+              cursor.setDate(cursor.getDate() + 1);
+              guard += 1;
+            }
           }
           return dates;
         }
 
         function renderCalendar() {
-          const postDates = getPostDates();
+          const postDateSet = getPostDateSet();
           const year = calendarYear;
           const month = calendarMonth;
           const now = new Date();
@@ -1356,7 +1439,17 @@
             const dayEnd = new Date(year, month, day, 23, 59, 59, 999);
             if (dayEnd > now && dateStr !== todayStr) el.disabled = true;
             if (dateStr === todayStr) el.classList.add("is-today");
-            if (postDates.has(dateStr)) el.classList.add("has-post");
+
+            const info = postDateSet.has(dateStr);
+            if (info) {
+              el.classList.add("has-post");
+              const column = (startDay + day - 1) % 7;
+              const continuesBefore = column > 0 && postDateSet.has(dateKey(year, month, day - 1));
+              const continuesAfter = column < 6 && postDateSet.has(dateKey(year, month, day + 1));
+              el.classList.toggle("has-post-start", !continuesBefore);
+              el.classList.toggle("has-post-end", !continuesAfter);
+              el.classList.toggle("has-post-middle", continuesBefore && continuesAfter);
+            }
             calendarGrid.append(el);
           }
         }
@@ -1364,8 +1457,99 @@
         calendarGrid.addEventListener("click", (event) => {
           const dayButton = event.target.closest("button.calendar-day[data-date]");
           if (!dayButton || dayButton.disabled) return;
+          if (dayButton.classList.contains("has-post")) {
+            openPostDetail(dayButton.dataset.date);
+            return;
+          }
           calendarDialog.close();
           openAddPostDialog(dayButton.dataset.date);
+        });
+
+        function findDayConflicts(startedAt, endedAt, excludedId = null) {
+          const rangeStart = new Date(startedAt);
+          const rangeEnd = new Date(endedAt);
+          rangeStart.setHours(0, 0, 0, 0);
+          rangeEnd.setHours(0, 0, 0, 0);
+          const from = rangeStart.getTime();
+          const to = rangeEnd.getTime();
+
+          return readFastHistory().filter((entry) => {
+            if (excludedId !== null && entry.id === excludedId) return false;
+            const entryStart = new Date(entry.startedAt);
+            const entryEnd = new Date(entry.endedAt);
+            entryStart.setHours(0, 0, 0, 0);
+            entryEnd.setHours(0, 0, 0, 0);
+            return entryStart.getTime() <= to && entryEnd.getTime() >= from;
+          });
+        }
+
+        function getEntriesForDate(dateStr) {
+          const [year, month, day] = dateStr.split("-").map(Number);
+          const dayStart = new Date(year, month - 1, day).getTime();
+          const dayEnd = new Date(year, month - 1, day, 23, 59, 59, 999).getTime();
+          return readFastHistory().filter((entry) => entry.startedAt <= dayEnd && entry.endedAt >= dayStart);
+        }
+
+        function openPostDetail(dateStr) {
+          const entries = getEntriesForDate(dateStr);
+          if (entries.length === 0) return;
+
+          detailEntryIds = entries.map((entry) => entry.id);
+          postDetailTitle.textContent = historyDateFormatter.format(new Date(`${dateStr}T12:00:00`).getTime());
+          postDetailList.replaceChildren();
+
+          for (const entry of entries) {
+            const item = document.createElement("div");
+            item.className = "post-detail-item";
+
+            const date = document.createElement("span");
+            date.className = "post-detail-date";
+            date.textContent = historyDateFormatter.format(entry.endedAt);
+
+            const duration = document.createElement("span");
+            duration.className = "post-detail-duration";
+            duration.textContent = formatDuration(entry.durationMs);
+
+            const meta = document.createElement("span");
+            meta.className = "post-detail-meta";
+            meta.textContent = `Начало в ${historyTimeFormatter.format(entry.startedAt)} · завершение в ${historyTimeFormatter.format(entry.endedAt)} · цель ${formatDuration(entry.goalMs)}`;
+
+            item.append(date, duration, meta);
+
+            if (entry.comment) {
+              const comment = document.createElement("span");
+              comment.className = "post-detail-comment";
+              comment.textContent = entry.comment;
+              item.append(comment);
+            }
+
+            postDetailList.append(item);
+          }
+
+          deletePostFromDetail.hidden = entries.length === 0;
+          postDetailDialog.showModal();
+        }
+
+        closePostDetailButton.addEventListener("click", () => postDetailDialog.close());
+        closePostDetailAction.addEventListener("click", () => postDetailDialog.close());
+        postDetailDialog.addEventListener("click", (event) => {
+          if (event.target === postDetailDialog) postDetailDialog.close();
+        });
+
+        deletePostFromDetail.addEventListener("click", () => {
+          if (!window.confirm("Удалить посты этой даты? Это действие нельзя отменить.")) return;
+          const ids = new Set(detailEntryIds);
+          const remaining = readFastHistory().filter((entry) => !ids.has(entry.id));
+          try {
+            localStorage.setItem(fastHistoryStorageKey, JSON.stringify(remaining));
+            syncLastFastEndTime(remaining);
+            renderHistory();
+            if (calendarDialog.open) renderCalendar();
+            postDetailDialog.close();
+            showNotice("Пост удалён.");
+          } catch {
+            showNotice("Не удалось удалить пост.");
+          }
         });
 
         function syncLastFastEndTime(entries) {
@@ -1437,6 +1621,13 @@
             return;
           }
 
+          const conflicts = findDayConflicts(startedAt, endedAt, editor.dataset.entryId);
+          if (conflicts.length > 0) {
+            error.textContent = `На эти даты уже есть другой пост: ${historyDateFormatter.format(conflicts[0].endedAt)}. Допустим только один пост в день.`;
+            error.hidden = false;
+            return;
+          }
+
           const entries = readFastHistory();
           const entryIndex = entries.findIndex((entry) => entry.id === editor.dataset.entryId);
           if (entryIndex === -1) return;
@@ -1460,8 +1651,12 @@
         });
 
         function openHistory() {
-          renderHistory();
-          historyDialog.showModal();
+          if (!historyDialog.open) historyDialog.showModal();
+          try {
+            renderHistory();
+          } catch {
+            showNotice("Не удалось обновить историю постов.");
+          }
         }
 
         historyTopButton.addEventListener("click", openHistory);
@@ -1564,6 +1759,12 @@
           const maxMs = maxDurationHours * hourMs;
           if (durationMs > maxMs) {
             showNotice(`Длительность не может превышать ${maxDurationHours} часов.`);
+            return;
+          }
+
+          const conflicts = findDayConflicts(startedAt, endedAt);
+          if (conflicts.length > 0) {
+            showNotice(`На эти даты уже есть пост: ${historyDateFormatter.format(conflicts[0].endedAt)}. Допустим только один пост в день.`);
             return;
           }
 
