@@ -392,6 +392,95 @@
 
       .data-file-input { display: none; }
 
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+        padding: 16px 22px 22px;
+      }
+
+      .calendar-weekday {
+        display: grid;
+        place-items: center;
+        padding: 8px 0;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+
+      .calendar-day {
+        display: grid;
+        place-items: center;
+        aspect-ratio: 1;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: #e5e1e4;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+      }
+
+      .calendar-day:hover:not(.is-empty) { background: #292729; }
+      .calendar-day:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      .calendar-day.is-empty { color: #4a474a; cursor: default; pointer-events: none; }
+      .calendar-day.is-today { color: var(--accent); }
+      .calendar-day.is-today:hover:not(.is-empty) { background: rgba(239, 79, 85, 0.15); }
+      .calendar-day.has-post {
+        position: relative;
+      }
+      .calendar-day.has-post::after {
+        content: "";
+        position: absolute;
+        inset: -3px;
+        border: 2px solid var(--green);
+        border-radius: 50%;
+        pointer-events: none;
+      }
+      .calendar-day.has-post.is-today::after { border-color: var(--green); }
+
+      @media (max-width: 420px) {
+        .calendar-grid { padding: 12px 16px 16px; gap: 3px; }
+        .calendar-day { font-size: 14px; }
+        .calendar-weekday { font-size: 11px; }
+      }
+
+      .calendar-nav {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 4px;
+      }
+
+      .calendar-nav-btn {
+        display: grid;
+        width: 40px;
+        height: 40px;
+        place-items: center;
+        border: 0;
+        border-radius: 50%;
+        background: #292729;
+        color: #e1dce0;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+      }
+
+      .calendar-nav-btn:hover { background: #393639; color: #fff; }
+      .calendar-nav-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      .calendar-nav-btn svg { width: 20px; height: 20px; }
+
+      .calendar-month-label {
+        min-width: 160px;
+        text-align: center;
+        color: #f7f5f6;
+        font-size: 16px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
       .duration-form {
         display: grid;
         gap: 18px;
@@ -434,6 +523,15 @@
       .duration-input:focus-visible {
         outline: 2px solid #f26a9e;
         outline-offset: 2px;
+      }
+
+      .duration-input-label textarea.duration-input {
+        min-height: 100px;
+        font-size: 16px;
+        font-variant-numeric: normal;
+        padding: 12px 16px;
+        resize: vertical;
+        line-height: 1.5;
       }
 
       .duration-actions {
@@ -664,7 +762,7 @@
           </svg>
         </button>
         <h1 class="brand">Ритм</h1>
-        <button class="icon-button" type="button" aria-label="Добавить запись">
+        <button class="icon-button" id="addPostBtn" type="button" aria-label="Добавить пост" aria-haspopup="dialog" aria-controls="addPostDialog">
           <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
             <path d="M16 7v18M7 16h18" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/>
           </svg>
@@ -767,6 +865,49 @@
       </div>
     </dialog>
 
+    <dialog class="duration-dialog" id="calendarDialog">
+      <div class="data-panel">
+        <header class="data-heading">
+          <div class="calendar-nav" id="calendarNav">
+            <button class="calendar-nav-btn" id="prevMonthBtn" type="button" aria-label="Предыдущий месяц">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m15 18-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <span class="calendar-month-label" id="calendarMonthLabel" aria-live="polite"></span>
+            <button class="calendar-nav-btn" id="nextMonthBtn" type="button" aria-label="Следующий месяц">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <button class="history-close" id="closeCalendarDialog" type="button" aria-label="Закрыть календарь">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </header>
+        <div class="calendar-grid" id="calendarGrid" role="grid" aria-label="Месячный календарь"></div>
+      </div>
+    </dialog>
+
+    <dialog class="duration-dialog" id="addPostDialog" aria-labelledby="addPostTitle">
+      <form class="duration-form" id="addPostForm">
+        <h2 id="addPostTitle">Добавить пост</h2>
+        <p>Создайте запись о завершённом посте вручную.</p>
+        <label class="duration-input-label" for="addPostStart">
+          Начало поста
+          <input class="duration-input" id="addPostStart" name="addPostStart" type="datetime-local" required>
+        </label>
+        <label class="duration-input-label" for="addPostEnd">
+          Завершение поста
+          <input class="duration-input" id="addPostEnd" name="addPostEnd" type="datetime-local" required>
+        </label>
+        <label class="duration-input-label" for="addPostComment">
+          Комментарий (необязательно)
+          <textarea class="duration-input" id="addPostComment" name="addPostComment" rows="3" maxlength="500" placeholder="Добавьте заметку..."></textarea>
+        </label>
+        <div class="duration-actions">
+          <button class="dialog-button" id="cancelAddPost" type="button">Отмена</button>
+          <button class="dialog-button dialog-button-primary" type="submit">Сохранить</button>
+        </div>
+      </form>
+    </dialog>
+
     <nav class="bottom-nav" aria-label="Основная навигация">
       <button class="nav-item is-current" type="button" aria-current="page">
         <svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" stroke-width="6"/><circle cx="18" cy="18" r="6" fill="currentColor"/></svg>
@@ -776,9 +917,9 @@
         <svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15" fill="currentColor"/><path d="m22.5 9-2.7 8.4-8.3 3 11-11.4Zm-9 17 2.6-6.2 6.5-2.5L13.5 26Z" fill="#171717"/></svg>
         <span>Обзор</span>
       </button>
-      <button class="nav-item" type="button">
-        <svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15" fill="currentColor"/><circle cx="18" cy="14" r="5" fill="#171717"/><path d="M8.5 27c1.2-5.1 4.4-7.7 9.5-7.7s8.3 2.6 9.5 7.7" fill="#171717"/></svg>
-        <span>Профиль</span>
+      <button class="nav-item" id="calendarNavBtn" type="button" aria-haspopup="dialog" aria-controls="calendarDialog">
+        <svg viewBox="0 0 36 36" fill="none" aria-hidden="true"><rect x="6" y="6" width="24" height="24" rx="3" stroke="currentColor" stroke-width="2"/><path d="M6 14h24M12 6v4M24 6v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span>Календарь</span>
       </button>
       <button class="nav-item" id="dataNavBtn" type="button" aria-haspopup="dialog" aria-controls="dataDialog">
         <svg viewBox="0 0 36 36" aria-hidden="true"><path d="M18 2c2.2 6.8-1.1 8.8 2.5 12.5 1.6-2.1 2-4.2 1.8-6.1 5 3.6 8.2 8.7 8.2 14.1A12.5 12.5 0 0 1 18 35 12.5 12.5 0 0 1 5.5 22.5c0-5.8 3.4-11.2 9.6-16.2-.5 5.1.1 7.7 1.9 9.2C19.2 11.4 18.6 7 18 2Z" fill="currentColor"/><path d="M18 19c3 3.3 4.3 5.4 4.3 7.7a4.3 4.3 0 0 1-8.6 0c0-2.3 1.3-4.4 4.3-7.7Z" fill="#171717"/></svg>
@@ -834,6 +975,17 @@
         const importDataButton = document.getElementById("importDataButton");
         const importDataFile = document.getElementById("importDataFile");
         const dataStatus = document.getElementById("dataStatus");
+        const calendarDialog = document.getElementById("calendarDialog");
+        const calendarNavButton = document.getElementById("calendarNavBtn");
+        const closeCalendarDialogButton = document.getElementById("closeCalendarDialog");
+        const calendarGrid = document.getElementById("calendarGrid");
+        const prevMonthButton = document.getElementById("prevMonthBtn");
+        const nextMonthButton = document.getElementById("nextMonthBtn");
+        const calendarMonthLabel = document.getElementById("calendarMonthLabel");
+        const addPostDialog = document.getElementById("addPostDialog");
+        const addPostButton = document.getElementById("addPostBtn");
+        const addPostForm = document.getElementById("addPostForm");
+        const cancelAddPostButton = document.getElementById("cancelAddPost");
         const historyDateFormatter = new Intl.DateTimeFormat("ru-RU", {
           day: "numeric",
           month: "long",
@@ -849,6 +1001,8 @@
         let lastFastEndTime = null;
         let ticker = null;
         let dayTicker = null;
+        let calendarYear = new Date().getFullYear();
+        let calendarMonth = new Date().getMonth();
 
         ring.style.strokeDasharray = `${visibleArc} ${circumference}`;
 
@@ -1040,12 +1194,38 @@
           return label;
         }
 
+        function renderWeek() {
+          const week = document.getElementById("week");
+          const postDates = getPostDates();
+          const now = new Date();
+          const today = (now.getDay() + 6) % 7;
+          const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - today);
+          const weekdays = ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"];
+          week.replaceChildren();
+          for (let index = 0; index < 7; index += 1) {
+            const date = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + index);
+            const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+            const day = document.createElement("div");
+            day.className = "day";
+            if (postDates.has(dateStr)) day.classList.add("is-complete");
+            if (index === today) day.setAttribute("aria-current", "date");
+            const label = document.createElement("span");
+            label.textContent = weekdays[index];
+            const ringEl = document.createElement("span");
+            ringEl.className = "day-ring";
+            ringEl.setAttribute("aria-hidden", "true");
+            day.append(label, ringEl);
+            week.append(day);
+          }
+        }
+
         function renderHistory() {
           const entries = readFastHistory();
           historyCount.textContent = String(entries.length);
           historyCountLabel.textContent = formatPostCount(entries.length);
           historyEmpty.hidden = entries.length > 0;
           historyList.replaceChildren();
+          renderWeek();
 
           for (const entry of entries) {
             const item = document.createElement("li");
@@ -1122,6 +1302,72 @@
           }
         }
 
+        function getPostDates() {
+          const entries = readFastHistory();
+          const dates = new Set();
+          for (const entry of entries) {
+            const date = new Date(entry.endedAt);
+            dates.add(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`);
+          }
+          return dates;
+        }
+
+        function renderCalendar() {
+          const postDates = getPostDates();
+          const year = calendarYear;
+          const month = calendarMonth;
+          const now = new Date();
+          const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
+          const todayStr = isCurrentMonth ? `${year}-${String(month + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}` : null;
+
+          const firstDay = new Date(year, month, 1);
+          const lastDay = new Date(year, month + 1, 0);
+          const startDay = (firstDay.getDay() + 6) % 7;
+          const daysInMonth = lastDay.getDate();
+
+          const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+            "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+          calendarMonthLabel.textContent = `${monthNames[month]} ${year}`;
+
+          const weekdays = ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"];
+          calendarGrid.innerHTML = "";
+
+          for (const wd of weekdays) {
+            const el = document.createElement("div");
+            el.className = "calendar-weekday";
+            el.textContent = wd;
+            calendarGrid.append(el);
+          }
+
+          for (let i = 0; i < startDay; i++) {
+            const el = document.createElement("div");
+            el.className = "calendar-day is-empty";
+            calendarGrid.append(el);
+          }
+
+          for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+            const el = document.createElement("button");
+            el.className = "calendar-day";
+            el.type = "button";
+            el.textContent = String(day);
+            el.dataset.date = dateStr;
+            el.setAttribute("aria-label", `${day} ${monthNames[month]} ${year}`);
+            const dayEnd = new Date(year, month, day, 23, 59, 59, 999);
+            if (dayEnd > now && dateStr !== todayStr) el.disabled = true;
+            if (dateStr === todayStr) el.classList.add("is-today");
+            if (postDates.has(dateStr)) el.classList.add("has-post");
+            calendarGrid.append(el);
+          }
+        }
+
+        calendarGrid.addEventListener("click", (event) => {
+          const dayButton = event.target.closest("button.calendar-day[data-date]");
+          if (!dayButton || dayButton.disabled) return;
+          calendarDialog.close();
+          openAddPostDialog(dayButton.dataset.date);
+        });
+
         function syncLastFastEndTime(entries) {
           const latest = entries.reduce((newest, entry) => Math.max(newest, entry.endedAt), 0);
           if (latest === 0) {
@@ -1184,6 +1430,12 @@
             error.hidden = false;
             return;
           }
+          const durationMs = endedAt - startedAt;
+          if (durationMs > maxDurationHours * hourMs) {
+            error.textContent = `Длительность не может превышать ${maxDurationHours} часов.`;
+            error.hidden = false;
+            return;
+          }
 
           const entries = readFastHistory();
           const entryIndex = entries.findIndex((entry) => entry.id === editor.dataset.entryId);
@@ -1192,7 +1444,8 @@
             ...entries[entryIndex],
             startedAt,
             endedAt,
-            durationMs: endedAt - startedAt,
+            durationMs,
+            goalMs: durationMs,
             comment: editor.elements.namedItem("comment").value.trim()
           };
 
@@ -1225,6 +1478,117 @@
         closeDataDialogButton.addEventListener("click", () => dataDialog.close());
         dataDialog.addEventListener("click", (event) => {
           if (event.target === dataDialog) dataDialog.close();
+        });
+
+        function openCalendar() {
+          const now = new Date();
+          calendarYear = now.getFullYear();
+          calendarMonth = now.getMonth();
+          renderCalendar();
+          calendarDialog.showModal();
+        }
+
+        calendarNavButton.addEventListener("click", openCalendar);
+        closeCalendarDialogButton.addEventListener("click", () => calendarDialog.close());
+        calendarDialog.addEventListener("click", (event) => {
+          if (event.target === calendarDialog) calendarDialog.close();
+        });
+
+        prevMonthButton.addEventListener("click", () => {
+          calendarMonth -= 1;
+          if (calendarMonth < 0) {
+            calendarMonth = 11;
+            calendarYear -= 1;
+          }
+          renderCalendar();
+        });
+
+        nextMonthButton.addEventListener("click", () => {
+          calendarMonth += 1;
+          if (calendarMonth > 11) {
+            calendarMonth = 0;
+            calendarYear += 1;
+          }
+          renderCalendar();
+        });
+
+        function openAddPostDialog(selectedDate = null) {
+          const now = new Date();
+          let endTimestamp = now.getTime();
+          if (selectedDate) {
+            const [year, month, day] = selectedDate.split("-").map(Number);
+            endTimestamp = Math.min(new Date(year, month - 1, day, 23, 59, 0, 0).getTime(), now.getTime());
+          }
+          const end = new Date(endTimestamp);
+          const start = new Date(endTimestamp - selectedDurationHours * hourMs);
+          const endStr = formatDateTimeLocal(end.getTime());
+          const startStr = formatDateTimeLocal(start.getTime());
+          addPostForm.elements.namedItem("addPostStart").value = startStr;
+          addPostForm.elements.namedItem("addPostEnd").value = endStr;
+          addPostForm.elements.namedItem("addPostComment").value = "";
+          addPostDialog.showModal();
+          addPostForm.elements.namedItem("addPostStart").focus();
+        }
+
+        addPostButton.addEventListener("click", openAddPostDialog);
+        cancelAddPostButton.addEventListener("click", () => addPostDialog.close());
+        addPostDialog.addEventListener("click", (event) => {
+          if (event.target === addPostDialog) addPostDialog.close();
+        });
+
+        addPostForm.addEventListener("submit", (event) => {
+          event.preventDefault();
+          if (!addPostForm.reportValidity()) return;
+
+          const startStr = addPostForm.elements.namedItem("addPostStart").value;
+          const endStr = addPostForm.elements.namedItem("addPostEnd").value;
+          const comment = addPostForm.elements.namedItem("addPostComment").value.trim();
+
+          const startedAt = new Date(startStr).getTime();
+          const endedAt = new Date(endStr).getTime();
+
+          if (!Number.isFinite(startedAt) || !Number.isFinite(endedAt)) {
+            showNotice("Укажите корректные дату и время.");
+            return;
+          }
+          if (startedAt >= endedAt) {
+            showNotice("Время начала должно быть раньше времени завершения.");
+            return;
+          }
+          if (endedAt > Date.now()) {
+            showNotice("Время завершения не может быть в будущем.");
+            return;
+          }
+
+          const durationMs = endedAt - startedAt;
+          const maxMs = maxDurationHours * hourMs;
+          if (durationMs > maxMs) {
+            showNotice(`Длительность не может превышать ${maxDurationHours} часов.`);
+            return;
+          }
+
+          const entry = {
+            startedAt,
+            endedAt,
+            durationMs,
+            goalMs: durationMs,
+            id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+            comment
+          };
+
+          try {
+            const saved = JSON.parse(localStorage.getItem(fastHistoryStorageKey) || "[]");
+            const history = Array.isArray(saved) ? saved : [];
+            history.unshift(entry);
+            localStorage.setItem(fastHistoryStorageKey, JSON.stringify(history.slice(0, 100)));
+            syncLastFastEndTime(history);
+            renderHistory();
+            if (calendarDialog.open) renderCalendar();
+            addPostDialog.close();
+            showNotice("Пост успешно добавлен.");
+          } catch {
+            showNotice("Не удалось сохранить пост.");
+          }
         });
 
         exportDataButton.addEventListener("click", () => {
@@ -1528,17 +1892,7 @@
           durationDialog.close();
         });
 
-        const weekdays = ["ВС", "ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ"];
-        const today = new Date().getDay();
-        const week = document.getElementById("week");
-        for (let offset = -5; offset <= 1; offset += 1) {
-          const dayNumber = (today + offset + 7) % 7;
-          const day = document.createElement("div");
-          day.className = "day";
-          if (offset === 0) day.classList.add("is-complete");
-          day.innerHTML = `<span>${weekdays[dayNumber]}</span><span class="day-ring" aria-hidden="true"></span>`;
-          week.append(day);
-        }
+        renderWeek();
 
         selectedDurationHours = readSelectedDuration();
         activeDurationMs = selectedDurationHours * hourMs;
