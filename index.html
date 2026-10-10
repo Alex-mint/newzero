@@ -699,15 +699,34 @@
       .timer-card.is-active .timer-action:hover { background: #454145; }
 
       .info-card {
-        display: flex;
-        min-height: 92px;
-        align-items: center;
-        gap: 20px;
+        display: grid;
+        gap: 12px;
         margin-top: 24px;
-        padding: 14px 21px;
+        padding: 10px;
         border-radius: 12px;
         background: #1c1b1c;
       }
+
+      .info-card[hidden] { display: none; }
+
+      .info-card-trigger {
+        display: flex;
+        width: 100%;
+        min-height: 92px;
+        align-items: center;
+        gap: 20px;
+        padding: 4px 11px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .info-card-trigger[hidden] { display: none; }
+      .info-card-trigger:hover { background: #262426; }
+      .info-card-trigger:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
       .plus-disc {
         display: grid;
@@ -723,9 +742,39 @@
         line-height: 1;
       }
 
-      .info-copy { display: grid; gap: 2px; }
+      .info-copy { display: grid; min-width: 0; gap: 4px; }
       .info-copy strong { font-size: 23px; font-weight: 750; }
-      .info-copy span { color: #bcb9bc; font-size: 21px; }
+      .info-copy span { color: #bcb9bc; font-size: 14px; line-height: 1.45; }
+      .info-copy .info-comment {
+        display: -webkit-box;
+        overflow: hidden;
+        color: #e2dfe2;
+        font-size: 15px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+      }
+
+      .info-editor { display: grid; gap: 10px; padding: 8px; }
+      .info-editor[hidden] { display: none; }
+      .info-editor-label { color: #c9c5c8; font-size: 13px; font-weight: 700; }
+      .info-editor textarea {
+        width: 100%;
+        min-height: 96px;
+        padding: 12px;
+        border: 1px solid #484348;
+        border-radius: 8px;
+        background: #111;
+        color: #fff;
+        font: inherit;
+        font-size: 15px;
+        line-height: 1.5;
+        resize: vertical;
+      }
+      .info-editor textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+      .info-editor-hint { margin: -4px 0 0; color: var(--muted); font-size: 12px; }
+      .info-editor-actions { display: flex; justify-content: flex-end; gap: 8px; }
 
       .bottom-nav {
         position: fixed;
@@ -784,9 +833,9 @@
         .timer-card { min-height: auto; padding: 28px 10px 28px; }
         .clock { width: min(100%, 420px); }
         .timer-action { min-height: 58px; margin-top: 16px; font-size: 20px; }
-        .info-card { gap: 14px; padding: 12px 16px; }
-        .info-copy strong { font-size: 20px; }
-        .info-copy span { font-size: 17px; }
+        .info-card-trigger { gap: 14px; padding: 4px 8px; }
+        .info-copy strong { font-size: 19px; }
+        .info-copy span { font-size: 13px; }
         .day { font-size: 12px; letter-spacing: 1px; }
         .day-ring { width: 35px; height: 35px; border-width: 7px; }
       }
@@ -831,12 +880,23 @@
         <button class="timer-action" id="timerAction" type="button">Начать пост</button>
       </section>
 
-      <section class="info-card" aria-label="Добавить за день">
-        <span class="plus-disc" aria-hidden="true">+</span>
-        <div class="info-copy">
-          <strong>Добавить за день</strong>
-          <span>Еда, активность, сон и другое</span>
-        </div>
+      <section class="info-card" id="activePostComment" aria-label="Комментарий к текущему посту" hidden>
+        <button class="info-card-trigger" id="postCommentTrigger" type="button" aria-expanded="false" aria-controls="postCommentEditor">
+          <span class="plus-disc" id="postCommentIcon" aria-hidden="true">+</span>
+          <span class="info-copy">
+            <strong id="postCommentTitle">Добавить комментарий</strong>
+            <span id="postCommentPreview">Заметка к текущему посту</span>
+          </span>
+        </button>
+        <form class="info-editor" id="postCommentEditor" hidden>
+          <label class="info-editor-label" for="activePostCommentInput">Комментарий к текущему посту</label>
+          <textarea id="activePostCommentInput" name="comment" maxlength="500" rows="3" placeholder="Что происходит в этом посте?"></textarea>
+          <p class="info-editor-hint">До 500 символов</p>
+          <div class="info-editor-actions">
+            <button class="dialog-button" id="cancelPostComment" type="button">Отмена</button>
+            <button class="dialog-button dialog-button-primary" type="submit">Сохранить</button>
+          </div>
+        </form>
       </section>
 
     </main>
@@ -999,6 +1059,7 @@
         const legacyEndTimeStorageKey = "zero-fast-end-time";
         const selectedDurationStorageKey = "zero-selected-duration-hours";
         const activeDurationStorageKey = "zero-active-duration-ms";
+        const activeFastCommentStorageKey = "zero-active-fast-comment";
         const lastFastEndStorageKey = "zero-last-fast-end-time";
         const fastHistoryStorageKey = "zero-fast-history";
         const backupStorageKeys = {
@@ -1006,6 +1067,7 @@
           legacyEndTime: legacyEndTimeStorageKey,
           selectedDurationHours: selectedDurationStorageKey,
           activeDurationMs: activeDurationStorageKey,
+          activeFastComment: activeFastCommentStorageKey,
           lastFastEndTime: lastFastEndStorageKey,
           fastHistory: fastHistoryStorageKey
         };
@@ -1014,6 +1076,14 @@
         const ring = document.getElementById("progressRing");
         const timerCard = document.getElementById("timerCard");
         const timerAction = document.getElementById("timerAction");
+        const activePostComment = document.getElementById("activePostComment");
+        const postCommentTrigger = document.getElementById("postCommentTrigger");
+        const postCommentIcon = document.getElementById("postCommentIcon");
+        const postCommentTitle = document.getElementById("postCommentTitle");
+        const postCommentPreview = document.getElementById("postCommentPreview");
+        const postCommentEditor = document.getElementById("postCommentEditor");
+        const activePostCommentInput = document.getElementById("activePostCommentInput");
+        const cancelPostComment = document.getElementById("cancelPostComment");
         const goalBadge = document.getElementById("goalBadge");
         const durationDialog = document.getElementById("durationDialog");
         const durationForm = document.getElementById("durationForm");
@@ -1067,6 +1137,7 @@
         });
         let selectedDurationHours = 36;
         let activeDurationMs = selectedDurationHours * hourMs;
+        let activeFastComment = "";
         let startTime = null;
         let lastFastEndTime = null;
         let ticker = null;
@@ -1100,8 +1171,11 @@
         function validateBackup(backup) {
           if (!backup || backup.app !== "ritm" || backup.version !== 1 || !backup.data || typeof backup.data !== "object") return false;
           const data = backup.data;
-          const names = Object.keys(backupStorageKeys);
+          const names = Object.keys(backupStorageKeys).filter((name) => name !== "activeFastComment");
           if (names.some((name) => !Object.hasOwn(data, name) || (data[name] !== null && typeof data[name] !== "string"))) return false;
+          if (Object.hasOwn(data, "activeFastComment")
+            && data.activeFastComment !== null
+            && (typeof data.activeFastComment !== "string" || data.activeFastComment.length > 500)) return false;
 
           const readNumber = (name) => {
             if (data[name] === null || data[name].trim() === "") return null;
@@ -1146,7 +1220,7 @@
 
         function writeBackupStorage(data) {
           for (const [name, key] of Object.entries(backupStorageKeys)) {
-            if (data[name] === null) localStorage.removeItem(key);
+            if (!Object.hasOwn(data, name) || data[name] === null) localStorage.removeItem(key);
             else localStorage.setItem(key, data[name]);
           }
         }
@@ -1160,6 +1234,7 @@
           selectedDurationHours = readSelectedDuration();
           activeDurationMs = readActiveDuration();
           lastFastEndTime = readLastFastEndTime();
+          activeFastComment = readActiveFastComment();
           startTime = readStartTime();
           updateGoalBadge();
 
@@ -1174,6 +1249,7 @@
             renderDaysSinceLastFast();
             dayTicker = window.setInterval(renderDaysSinceLastFast, 60000);
           }
+          updateActivePostComment();
           renderHistory();
         }
 
@@ -1232,11 +1308,13 @@
             history.unshift({
               ...entry,
               id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
-              comment: ""
+              comment: typeof entry.comment === "string" ? entry.comment : ""
             });
             localStorage.setItem(fastHistoryStorageKey, JSON.stringify(history.slice(0, 100)));
+            return true;
           } catch {
             showNotice("Пост завершён, но сохранить его в истории не удалось.");
+            return false;
           }
         }
 
@@ -1947,6 +2025,44 @@
           }
         }
 
+        function saveActiveFastComment(comment) {
+          try {
+            localStorage.setItem(activeFastCommentStorageKey, comment);
+            return true;
+          } catch {
+            showNotice("Не удалось сохранить комментарий к текущему посту.");
+            return false;
+          }
+        }
+
+        function readActiveFastComment() {
+          try {
+            const saved = localStorage.getItem(activeFastCommentStorageKey) || "";
+            if (saved.length <= 500) return saved;
+            showNotice("Комментарий к текущему посту слишком длинный и не был восстановлен.");
+            return "";
+          } catch {
+            showNotice("Браузер не смог восстановить комментарий к текущему посту.");
+            return "";
+          }
+        }
+
+        function updateActivePostComment() {
+          const isActive = startTime !== null;
+          activePostComment.hidden = !isActive;
+          if (!isActive) {
+            postCommentEditor.hidden = true;
+            postCommentTrigger.hidden = false;
+            postCommentTrigger.setAttribute("aria-expanded", "false");
+            return;
+          }
+
+          postCommentIcon.textContent = activeFastComment ? "✎" : "+";
+          postCommentTitle.textContent = activeFastComment ? "Изменить комментарий" : "Добавить комментарий";
+          postCommentPreview.textContent = activeFastComment || "Нажмите, чтобы добавить заметку";
+          postCommentPreview.classList.toggle("info-comment", Boolean(activeFastComment));
+        }
+
         function updateGoalBadge() {
           goalBadge.textContent = String(selectedDurationHours);
           goalBadge.setAttribute("aria-label", `Изменить длительность поста, ${selectedDurationHours} ч`);
@@ -2020,15 +2136,19 @@
           }
           saveStartTime(null);
           saveLastFastEndTime(finishedAt);
-          saveFastHistory({
+          const savedToHistory = saveFastHistory({
             startedAt: previousStartTime,
             endedAt: finishedAt,
             durationMs: elapsedMs,
-            goalMs: activeDurationMs
+            goalMs: activeDurationMs,
+            comment: activeFastComment
           });
+          if (savedToHistory) saveActiveFastComment("");
+          activeFastComment = "";
           timerCard.classList.remove("is-active", "is-goal-reached");
           timerAction.textContent = "Начать пост";
           updateGoalBadge();
+          updateActivePostComment();
           renderDaysSinceLastFast();
           dayTicker = window.setInterval(renderDaysSinceLastFast, 60000);
         }
@@ -2045,12 +2165,15 @@
             dayTicker = null;
           }
           activeDurationMs = selectedDurationHours * hourMs;
+          activeFastComment = "";
+          saveActiveFastComment(activeFastComment);
           startTime = Date.now();
           timerCard.classList.add("is-active");
           timerAction.textContent = "Завершить пост";
           updateGoalBadge();
           saveActiveDuration(activeDurationMs);
           saveStartTime(startTime);
+          updateActivePostComment();
           updateTimer();
           ticker = window.setInterval(updateTimer, 1000);
         }
@@ -2062,6 +2185,36 @@
             hideNotice();
             finishFast();
           }
+        });
+
+        postCommentTrigger.addEventListener("click", () => {
+          if (startTime === null) return;
+          activePostCommentInput.value = activeFastComment;
+          postCommentTrigger.hidden = true;
+          postCommentEditor.hidden = false;
+          postCommentTrigger.setAttribute("aria-expanded", "true");
+          activePostCommentInput.focus();
+        });
+
+        cancelPostComment.addEventListener("click", () => {
+          activePostCommentInput.value = activeFastComment;
+          postCommentEditor.hidden = true;
+          postCommentTrigger.hidden = false;
+          postCommentTrigger.setAttribute("aria-expanded", "false");
+          postCommentTrigger.focus();
+        });
+
+        postCommentEditor.addEventListener("submit", (event) => {
+          event.preventDefault();
+          const comment = activePostCommentInput.value.trim();
+          if (!saveActiveFastComment(comment)) return;
+
+          activeFastComment = comment;
+          postCommentEditor.hidden = true;
+          postCommentTrigger.hidden = false;
+          postCommentTrigger.setAttribute("aria-expanded", "false");
+          updateActivePostComment();
+          postCommentTrigger.focus();
         });
 
         goalBadge.addEventListener("click", () => {
@@ -2099,6 +2252,7 @@
         activeDurationMs = selectedDurationHours * hourMs;
         updateGoalBadge();
         lastFastEndTime = readLastFastEndTime();
+        activeFastComment = readActiveFastComment();
         startTime = readStartTime();
         if (startTime !== null) {
           activeDurationMs = readActiveDuration();
@@ -2108,9 +2262,11 @@
           updateTimer();
           ticker = window.setInterval(updateTimer, 1000);
         } else {
+          activeFastComment = "";
           renderDaysSinceLastFast();
           dayTicker = window.setInterval(renderDaysSinceLastFast, 60000);
         }
+        updateActivePostComment();
       })();
     </script>
   </body>
